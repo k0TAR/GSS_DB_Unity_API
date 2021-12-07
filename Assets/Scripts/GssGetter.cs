@@ -26,18 +26,20 @@ public class GssGetter : MonoBehaviour
         {
             var result = request.downloadHandler.text;
             Debug.Log(result);
+            Debug.Log(result.GetType());
 
-            var response = Json.Deserialize(result);
-            Debug.Log(string.Join(",", response));
+            var response = JsonUtility.FromJson<ResponseData>(result);
+            Debug.Log($"playerName : {response.playerName}, message : {response.message}");
+            //Debug.Log(string.Join(",", response));
         }
     }
 
     [System.Serializable]
     public class ResponseData
     {
-        public string userId;
-        public string updateTime;
+        [SerializeField]
         public string playerName;
+        [SerializeField]
         public string message;
     }
 }
