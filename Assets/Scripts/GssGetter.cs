@@ -1,5 +1,4 @@
-﻿using MiniJSON;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -21,16 +20,18 @@ public class GssGetter : MonoBehaviour
         if (request.isHttpError || request.isNetworkError)
         {
             Debug.Log(request.error);
+            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to Google Sheets failed. Error: {request.error}");
         }
         else
         {
-            var result = request.downloadHandler.text;
-            Debug.Log(result);
-            Debug.Log(result.GetType());
+            var request_result = request.downloadHandler.text;
+            print(request_result);
 
-            var response = JsonUtility.FromJson<ResponseData>(result);
-            Debug.Log($"playerName : {response.playerName}, message : {response.message}");
-            //Debug.Log(string.Join(",", response));
+            var response = JsonExtension.FromJson<ResponseData>(request_result);
+            for(int i = 0; i < response.Length; i++)
+            {
+                Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+            }
         }
     }
 

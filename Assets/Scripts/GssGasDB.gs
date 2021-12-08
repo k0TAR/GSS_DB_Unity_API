@@ -3,7 +3,7 @@ var sheetName = 'sheet';
 
 // GETメソッドで実行される
 function doGet(e){
-  var gssKey = '1eyClP-LRNuCNAMIhdG2CcgjbYJsuOAMAfXOoTvEMFTk';
+  var gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
   var gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
   var keys = ['userId', 'updateTime', 'playerName', 'message'];
   var userId = '001';
@@ -15,38 +15,43 @@ function doGet(e){
   var header = sheetData[0]
   
   // Find whether user id already exists
-  var row = findRowByUserId(sheetData, userId);
+  var user_rows = findRowsByUserId(sheetData, userId);
 
-  if(row == 0){
+  if(user_rows.length == 0){
     return ContentService.createTextOutput("Error: Invalid user id");
   }
-  
-  var result = {};
-  for(var i = 0; i < keys.length; i++){
-    var column = findColumnByKey(header, keys[i]);
-    if(column == 0){
-      continue;
-    }else{
-      result[keys[i]] = sheetData[row][column] ;
-    }
-    
-  }
 
-  var j = ContentService.createTextOutput(JSON.stringify(result));
+  const payloadKey = "payload";
+  var returning_datas = {};
+  var datas = [];
+  for(var i = 0; i < user_rows.length; i++)
+  {
+    data = new Object();
+    for(var j = 0; j < keys.length; j++){
+      var column = findColumnByKey(header, keys[j]);
+      if(column == 0){
+        continue;
+      }else{
+        data[keys[j]]= sheetData[user_rows[i]][column] ;
+      }
+    }
+    datas[i] = data;
+  }
+  returning_datas[payloadKey] = datas;
+
+  var j = ContentService.createTextOutput(JSON.stringify(returning_datas));
   Logger.log(j.getContent());
   return j;
 }
 
-function findRowByUserId(sheetData, userId) {
-  var row = 0;
+function findRowsByUserId(sheetData, userId) {
+  var rows = [];
   for(var i = 1; i < sheetData.length; i++){
     if(sheetData[i][0] == userId){
-      row = i;
-      //finding the first row and end.
-      break;
+      rows.push(i);
     }
   }
-  return row;
+  return rows;
 }
 
 function findColumnByKey(header, key) {
@@ -62,20 +67,9 @@ function findColumnByKey(header, key) {
 
 // POSTメソッドで実行される
 function doPost(e){
-  //  パラメータでJsonを受け取り、パース
-  const jsonString = e.postData.getDataAsString();
-  const data = JSON.parse(jsonString);
-  let point = data.point;
 
-  // データを加工しありスプレッドシートを操作したり
-  const value = 0;
-
-  // レスポンスとしてJsonを返す
-  const response = JSON.stringify({ message: "succeeded" });
-  let output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  output.setContent(response);
-  return output;
+  
+  return ContentService.createTextOutput("Save data succeeded");
 }
 
 /*
@@ -127,7 +121,7 @@ function saveData(payload) {
   var header = sheetData[0];
   
   // Find whether user id already exists
-  var row = findRowByUserId(sheetData, userId);
+  var row = findRowsByUserId(sheetData, userId);
   if(row != 0){
     // User id already exists
     for(var key in data){
@@ -203,7 +197,7 @@ function getData(payload) {
   var header = sheetData[0]
   
   // Find whether user id already exists
-  var row = findRowByUserId(sheetData, userId);
+  var row = findRowsByUserId(sheetData, userId);
   if(row == 0){
     return ContentService.createTextOutput("Error: Invalid user id");
   }
@@ -217,7 +211,7 @@ function getData(payload) {
   return ContentService.createTextOutput(JSON.stringify(ret));
 }
 
-function findRowByUserId(sheetData, userId) {
+function findRowsByUserId(sheetData, userId) {
   var row = 0;
   for(var i = 1; i < sheetData.length; i++){
     if(sheetData[i][0] == userId){
