@@ -1,14 +1,21 @@
 const gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
 const sheetName = 'sheet';
 const keys = ['userId', 'updateTime', 'playerName', 'message'];
+// Constants used and shared within GAS and Unity.
+var PAYLOAD_CONSTS = {
+  Method : "method",
+  Payload: "payload",
+  UserId: "userId",
+  SaveDataMethod: "saveData",
+  GetDatasMethod: "getUserDatas",
+  GetUserIdMethod: "getUserIds"
+};
 
-// GETメソッドで実行される
-function doGet(e){
-  var userId = e.parameter["userId"];
-  //var userId = '001';
+function getUserDatas(userId)
+{
   var gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
   if(gssSheet == null) {
-    return ContentService.createTextOutput("Error: Invalid sheet name");
+    return ContentService.createTextOutput("Error: Invalid sheet name.");
   }
 
   var sheetData = gssSheet.getDataRange().getValues();
@@ -18,10 +25,10 @@ function doGet(e){
   var user_rows = findRowsByUserId(sheetData, userId);
 
   if(user_rows.length == 0){
-    return ContentService.createTextOutput("Error: Invalid user id");
+    return ContentService.createTextOutput("Error: Invalid userId.");
   }
 
-  const payloadKey = "payload";
+  const payloadKey = PAYLOAD_CONSTS.Payload;
   var returning_datas = {};
   var datas = [];
   for(var i = 0; i < user_rows.length; i++)
@@ -37,11 +44,25 @@ function doGet(e){
     }
     datas[i] = data;
   }
-  returning_datas[payloadKey] = datas;
+  returning_datas[PAYLOAD_CONSTS.Payload] = datas;
 
   var j = ContentService.createTextOutput(JSON.stringify(returning_datas));
   Logger.log(j.getContent());
   return j;
+}
+
+// GETメソッドで実行される
+function doGet(e){
+  const request = e.parameter;
+
+  if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetDatasMethod){
+    var userId = request["userId"];
+    return getUserDatas(userId);
+  }
+  else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetUserIdMethod){
+    var userId = request["userId"];
+    return getUserDatas(userId);
+  }
 }
 
 function findRowsByUserId(sheetData, userId) {

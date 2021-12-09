@@ -6,26 +6,31 @@ public class GssGetter : MonoBehaviour
 {
     private const string URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
     [SerializeField]
-    private string searchingUserId = "";
+    private string _searchingUserId = "";
     [SerializeField]
-    private bool sendRequest = false;
+    private MethodNames _requestMethod = MethodNames.getUserDatas;
+    [SerializeField]
+    private bool _sendRequest = false;
+    
 
-    private void Start()
+    enum MethodNames
     {
+        getUserIds,
+        getUserDatas,
     }
 
     private void Update()
     {
-        if(sendRequest)
+        if(_sendRequest)
         {
-            StartCoroutine(GetGssDatas(searchingUserId));
-            sendRequest = false;
+            StartCoroutine(GetGssDatas(_searchingUserId));
+            _sendRequest = false;
         }
     }
 
     public IEnumerator GetGssDatas(string userId)
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{URI}?userId={userId}");
+        UnityWebRequest request = UnityWebRequest.Get($"{URI}?userId={userId}&method={_requestMethod}");
 
         yield return request.SendWebRequest();
 
