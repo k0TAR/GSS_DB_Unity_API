@@ -1,8 +1,8 @@
 const gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
 const sheetName = 'sheet';
-const keys = ['userId', 'updateTime', 'playerName', 'message'];
+// const keys = ['userId', 'updateTime', 'playerName', 'message'];
 // Constants used and shared within GAS and Unity.
-var PAYLOAD_CONSTS = {
+const PAYLOAD_CONSTS = {
   Method : "method",
   Payload: "payload",
   UserId: "userId",
@@ -11,15 +11,56 @@ var PAYLOAD_CONSTS = {
   GetUserIdMethod: "getUserIds"
 };
 
-function getUserDatas(userId)
+function getUserIds(){
+  let gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
+  if(gssSheet == null) {
+    return ContentService.createTextOutput("Error: Invalid sheet name.");
+  }
+  const sheetData = gssSheet.getDataRange().getValues();
+
+  userIdsData = {
+    [PAYLOAD_CONSTS.Payload] : findUserIds(sheetData)
+  }
+  sendingBackPayload = ContentService.createTextOutput(JSON.stringify(userIdsData));
+  Logger.log(sendingBackPayload.getContent());
+  return sendingBackPayload;
+}
+
+function findUserIds(sheetData)
 {
-  var gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
+  let userIdsSet = new Set();
+  const userIdColumn = findUserIdColumn(sheetData[0]);
+  //from 1 to skip the header row.
+  for(let i = 1; i < sheetData.length; i++){
+    userIdsSet.add(sheetData[i][userIdColumn]);
+  }
+  //Spread syntax: expanding
+  let userIdsArr = [];
+  for(let userId of userIdsSet)
+  {
+    let userIdElement = new Object();
+    userIdElement[PAYLOAD_CONSTS.UserId] = userId;
+    userIdsArr.push(userIdElement);
+  }
+  return userIdsArr;
+}
+
+function findUserIdColumn(sheetHeader){
+  for(let i = 0; i < sheetHeader.length; i++){
+    if(sheetHeader[i] == PAYLOAD_CONSTS.UserId){
+      return i;
+    }
+  }
+}
+
+function getUserDatas(userId){
+  let gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
   if(gssSheet == null) {
     return ContentService.createTextOutput("Error: Invalid sheet name.");
   }
 
   const sheetData = gssSheet.getDataRange().getValues();
-  const sheet_header = sheetData[0];
+  const sheetHeader = sheetData[0];
   
   // Find whether user id already exists
   const user_rows = findUserRowsByUserId(sheetData, userId);
@@ -28,18 +69,13 @@ function getUserDatas(userId)
     return ContentService.createTextOutput(`Error: \"${userId}\" was invalid userId.`);
   }
 
-  var returning_datas = {};
-  var datas = [];
-  for(var i = 0; i < user_rows.length; i++)
+  let returning_datas = {};
+  let datas = [];
+  for(let i = 0; i < user_rows.length; i++)
   {
     data = new Object();
-    for(var j = 0; j < keys.length; j++){
-      var column = findColumnByKey(sheet_header, keys[j]);
-      if(column == 0){
-        continue;
-      }else{
-        data[keys[j]]= sheetData[user_rows[i]][column] ;
-      }
+    for(let j = 2; j < sheetHeader.length; j++){
+      data[sheetHeader[j]]= sheetData[user_rows[i]][j] ;
     }
     datas[i] = data;
   }
@@ -53,7 +89,7 @@ function getUserDatas(userId)
 function generateDebugTestPayloadObject(){
   //[variable], [] makes the variable to expand.
   const fakePayload = {
-    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetDatasMethod],
+    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetUserIdMethod],
     [PAYLOAD_CONSTS.UserId] : "001",
   };
   //fakePayload[PAYLOAD_CONSTS.Method]= PAYLOAD_CONSTS.GetDatasMethod;
@@ -76,30 +112,18 @@ function doGet(e){
     return getUserDatas(userId);
   }
   else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetUserIdMethod){
-    var userId = request["userId"];
-    return getUserDatas(userId);
+    return getUserIds();
   }
 }
 
 function findUserRowsByUserId(sheetData, userId) {
-  var rows = [];
-  for(var i = 1; i < sheetData.length; i++){
+  let rows = [];
+  for(let i = 1; i < sheetData.length; i++){
     if(sheetData[i][0] == userId){
       rows.push(i);
     }
   }
   return rows;
-}
-
-function findColumnByKey(sheet_header, key) {
-  var column = 0;
-  for(var i = 2; i < sheet_header.length; i++){
-    if(sheet_header[i] == key){
-      column  = i;
-      break;
-    }
-  }
-  return column;
 }
 
 // POSTメソッドで実行される
@@ -154,8 +178,8 @@ function saveData(payload) {
   
   // Retrieve all data
   var sheetData = sheet.getDataRange().getValues();
-  // sheet_header data
-  var sheet_header = sheetData[0];
+  // sheetHeader data
+  var sheetHeader = sheetData[0];
   
   // Find whether user id already exists
   var row = findUserRowsByUserId(sheetData, userId);
@@ -164,40 +188,40 @@ function saveData(payload) {
     for(var key in data){
       var value = data[key];
       // Find whether the key of the data to be saved aleardy exists
-      var column = findColumnByKey(sheet_header, key);
+      var column = findColumnByKey(sheetHeader, key);
       if(column != 0){
         // The key already exists, overwrite the value
         sheet.getRange(row, column).setValue(value);
       }else{
         // Adds a new key column
-        sheet_header.push(key);
-        sheet.getRange(1, sheet_header.length).setValue(key);
+        sheetHeader.push(key);
+        sheet.getRange(1, sheetHeader.length).setValue(key);
         // Appends the value of the key
-        sheet.getRange(row, sheet_header.length).setValue(value);
+        sheet.getRange(row, sheetHeader.length).setValue(value);
       }
     }
   }else{
-    // Insert sheet_header title if it has not been set
-    if(sheet_header == null || sheet_header.length < 2){
+    // Insert sheetHeader title if it has not been set
+    if(sheetHeader == null || sheetHeader.length < 2){
       var values = [["userId", "updateTime"]];
       sheet.getRange(1, 1, 1, 2).setValues(values);
-      sheet_header = values[0];
+      sheetHeader = values[0];
     }
     
     // Appends a new row
     var content = [];
-    for(var i = 0; i < sheet_header.length; i++) content.push("");
+    for(var i = 0; i < sheetHeader.length; i++) content.push("");
     content[0] = userId;
     content[1] = time;
     for(var key in data){
       var value = data[key];
-      var column = findColumnByKey(sheet_header, key);
+      var column = findColumnByKey(sheetHeader, key);
       if(column != 0){
         content[column - 1] = value;
       }else{
         // Adds a new key column
-        sheet_header.push(key);
-        sheet.getRange(1, sheet_header.length).setValue(key);
+        sheetHeader.push(key);
+        sheet.getRange(1, sheetHeader.length).setValue(key);
         // Appends the value
         content.push(value);
       }
@@ -231,7 +255,7 @@ function getData(payload) {
   }
   
   var sheetData = sheet.getDataRange().getValues();
-  var sheet_header = sheetData[0]
+  var sheetHeader = sheetData[0]
   
   // Find whether user id already exists
   var row = findUserRowsByUserId(sheetData, userId);
@@ -241,7 +265,7 @@ function getData(payload) {
   
   var ret = [];
   for(var i = 0; i < keys.length; i++){
-    var column = findColumnByKey(sheet_header, keys[i]);
+    var column = findColumnByKey(sheetHeader, keys[i]);
     ret.push(column == 0 ? "#NULL#" : sheetData[row - 1][column - 1]);
   }
   
@@ -259,10 +283,10 @@ function findUserRowsByUserId(sheetData, userId) {
   return row;
 }
 
-function findColumnByKey(sheet_header, key) {
+function findColumnByKey(sheetHeader, key) {
   var column = 0;
-  for(var i = 2; i < sheet_header.length; i++){
-    if(sheet_header[i] == key){
+  for(var i = 2; i < sheetHeader.length; i++){
+    if(sheetHeader[i] == key){
       column  = i + 1;
       break;
     }

@@ -52,7 +52,14 @@ public class GssGetter : MonoBehaviour
                 var response = JsonExtension.FromJson<ResponseData>(request_result);
                 for (int i = 0; i < response.Length; i++)
                 {
-                    Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+                    if(response[i].playerName != null)
+                    {
+                        Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+                    }
+                    else if(response[i].userId != null)
+                    {
+                        Debug.Log($"userId : {response[i].userId}");
+                    }
                 }
             }
         }
@@ -65,5 +72,7 @@ public class GssGetter : MonoBehaviour
         public string playerName;
         [SerializeField]
         public string message;
+        [SerializeField]
+        public string userId;
     }
 }
