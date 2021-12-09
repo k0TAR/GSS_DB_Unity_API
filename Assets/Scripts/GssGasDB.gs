@@ -133,7 +133,7 @@ function doGet(e){
 function generateDebugObjectForGET(){
   //[variable], [] makes the variable to expand.
   const fakePayload = {
-    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetDatasMethod],
+    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
     [PAYLOAD_CONSTS.PlayerName] : "tester",
   };
   return fakePayload;
@@ -156,23 +156,28 @@ function doPost(e){
 
   const userName = request[PAYLOAD_CONSTS.PlayerName];
   const userId = findUserId(sheetData, userName);
-  const userRows = findUserRowsByUserId(sheetData, userId);
   const messageExistsInGSS = false;
 
-  for(let user_row in userRows){
-    if(sheetData[user_row][MessageColumn] == request[PAYLOAD_CONSTS.Message]){
-      sheetData[user_row][UpdateTimeColumn].setValue(currentTime);
-      sheetData[user_row][MessageColumn].setValue(request[PAYLOAD_CONSTS.Message]);
-      messageExistsInGSS = true;
-      break;
+  if(userId != null){
+    const userRows = findUserRowsByUserId(sheetData, userId);
+
+    for(let user_row in userRows){
+      if(sheetData[user_row][MessageColumn] == request[PAYLOAD_CONSTS.Message]){
+        sheetData[user_row][UpdateTimeColumn].setValue(currentTime);
+        sheetData[user_row][MessageColumn].setValue(request[PAYLOAD_CONSTS.Message]);
+        messageExistsInGSS = true;
+        break;
+      }
     }
   }
-  
-  if(messageExistsInGSS){
 
-  }
-  else{
-
+  if(!messageExistsInGSS){
+    let addingData = [];
+    addingData[UserIdColumn] = (userId == null) ? findMaxUserId(sheetData) + 1 : userId;
+    addingData[UpdateTimeColumn] = currentTime;
+    addingData[PlayerNameColumn] = request[PAYLOAD_CONSTS.PlayerName];
+    addingData[MessageColumn] = request[PAYLOAD_CONSTS.Message];
+    gssSheet.appendRow(addingData);
   }
 
   
@@ -182,8 +187,8 @@ function doPost(e){
 function generateDebugObjectForPOST(){
   const fakePayload = {
     [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
-    [PAYLOAD_CONSTS.UserId] : "002",
-    [PAYLOAD_CONSTS.Message] : "POSTING"
+    [PAYLOAD_CONSTS.PlayerName] : "New",
+    [PAYLOAD_CONSTS.Message] : "NewMessage",
   };
   return fakePayload;
 }
@@ -194,6 +199,17 @@ function findUserId(sheetData, playerName){
       return sheetData[i][UserIdColumn];
     }
   }
+  return null;
+}
+
+function findMaxUserId(sheetData){
+  let maxId = 0;
+  for(let i = 1; i < sheetData.length; i++){
+    if(maxId < sheetData[i][UserIdColumn]){
+      maxId = sheetData[i][UserIdColumn];
+    }
+  }
+  return maxId;
 }
 
 /*

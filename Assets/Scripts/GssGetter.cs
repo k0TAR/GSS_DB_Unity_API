@@ -4,9 +4,11 @@ using UnityEngine.Networking;
 
 public class GssGetter : MonoBehaviour
 {
-    private const string URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
+    private const string _URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
     [SerializeField]
-    private string _searchingPlayerName = "";
+    private string _playerName = "";
+    [SerializeField]
+    private string _message = "";
     [SerializeField]
     private MethodNames _requestMethod = MethodNames.GetUserDatas;
     [SerializeField]
@@ -25,7 +27,7 @@ public class GssGetter : MonoBehaviour
         {
             if(_requestMethod == MethodNames.GetUserDatas)
             {
-                StartCoroutine(GetUserDatas(_searchingPlayerName));
+                StartCoroutine(GetUserDatas(_playerName));
             }
             else if (_requestMethod == MethodNames.GetPlayerNames)
             {
@@ -37,22 +39,22 @@ public class GssGetter : MonoBehaviour
 
     public IEnumerator GetUserDatas(string playerName)
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{URI}?playerName={playerName}&method={MethodNames.GetUserDatas}");
+        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?playerName={playerName}&method={MethodNames.GetUserDatas}");
 
         yield return request.SendWebRequest();
 
         if (request.isHttpError || request.isNetworkError)
         {
             Debug.Log(request.error);
-            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to Google Sheets failed. Error: {request.error}");
+            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to GAS failed. Error: {request.error}");
         }
         else
         {
             var request_result = request.downloadHandler.text;
-            print(request_result);
 
             if (request_result[0] == 'E')
             {
+                print(request_result);
                 yield break;
             }
             else
@@ -71,14 +73,14 @@ public class GssGetter : MonoBehaviour
 
     public IEnumerator GetPlayerNames()
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{URI}?method={MethodNames.GetPlayerNames}");
+        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetPlayerNames}");
 
         yield return request.SendWebRequest();
 
         if (request.isHttpError || request.isNetworkError)
         {
             Debug.Log(request.error);
-            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to Google Sheets failed. Error: {request.error}");
+            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to GAS failed. Error: {request.error}");
         }
         else
         {
