@@ -1,12 +1,12 @@
-var sheetName = 'sheet';
-
+const gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
+const sheetName = 'sheet';
+const keys = ['userId', 'updateTime', 'playerName', 'message'];
 
 // GETメソッドで実行される
 function doGet(e){
-  var gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
+  var userId = e.parameter["userId"];
+  //var userId = '001';
   var gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
-  var keys = ['userId', 'updateTime', 'playerName', 'message'];
-  var userId = '001';
   if(gssSheet == null) {
     return ContentService.createTextOutput("Error: Invalid sheet name");
   }

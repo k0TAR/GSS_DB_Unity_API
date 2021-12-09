@@ -5,15 +5,27 @@ using UnityEngine.Networking;
 public class GssGetter : MonoBehaviour
 {
     private const string URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
+    [SerializeField]
+    private string searchingUserId = "";
+    [SerializeField]
+    private bool sendRequest = false;
 
     private void Start()
     {
-        StartCoroutine(Get());
     }
 
-    public IEnumerator Get()
+    private void Update()
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{URI}?");
+        if(sendRequest)
+        {
+            StartCoroutine(GetGssDatas(searchingUserId));
+            sendRequest = false;
+        }
+    }
+
+    public IEnumerator GetGssDatas(string userId)
+    {
+        UnityWebRequest request = UnityWebRequest.Get($"{URI}?userId={userId}");
 
         yield return request.SendWebRequest();
 
@@ -26,11 +38,17 @@ public class GssGetter : MonoBehaviour
         {
             var request_result = request.downloadHandler.text;
             print(request_result);
-
-            var response = JsonExtension.FromJson<ResponseData>(request_result);
-            for(int i = 0; i < response.Length; i++)
+            if(request_result[0] == 'E')
             {
-                Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+                yield break;
+            }
+            else
+            {
+                var response = JsonExtension.FromJson<ResponseData>(request_result);
+                for (int i = 0; i < response.Length; i++)
+                {
+                    Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+                }
             }
         }
     }
