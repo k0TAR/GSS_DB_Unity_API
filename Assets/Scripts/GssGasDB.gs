@@ -1,50 +1,22 @@
-const gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
-const sheetName = 'sheet';
-// const keys = ['userId', 'updateTime', 'playerName', 'message'];
+let gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
+let sheetName = 'sheet';
 // Constants used and shared within GAS and Unity.
 const PAYLOAD_CONSTS = {
-  Method : "method",
   Payload: "payload",
-  UserId: "userId",
-  SaveDataMethod: "saveData",
-  GetDatasMethod: "getUserDatas",
-  GetUserIdMethod: "getUserIds"
+  UserId: "userId", //An id that will probably always exist in any data design.
+  PlayerName: "playerName",
+  Message: "message",
+  Time: "updateTime",
+  Method : "method",
+  SaveDataMethod: "SaveUserData",
+  GetDatasMethod: "GetUserDatas",
+  GetPlayerNamesMethod: "GetPlayerNames"
 };
-
-function getUserIds(){
-  let gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
-  if(gssSheet == null) {
-    return ContentService.createTextOutput("Error: Invalid sheet name.");
-  }
-  const sheetData = gssSheet.getDataRange().getValues();
-
-  userIdsData = {
-    [PAYLOAD_CONSTS.Payload] : findUserIds(sheetData)
-  }
-  sendingBackPayload = ContentService.createTextOutput(JSON.stringify(userIdsData));
-  Logger.log(sendingBackPayload.getContent());
-  return sendingBackPayload;
-}
-
-function findUserIds(sheetData)
-{
-  let userIdsSet = new Set();
-  const userIdColumn = findUserIdColumn(sheetData[0]);
-  //from 1 to skip the header row.
-  for(let i = 1; i < sheetData.length; i++){
-    userIdsSet.add(sheetData[i][userIdColumn]);
-  }
-  //Spread syntax: expanding
-  let userIdsArr = [];
-  for(let userId of userIdsSet)
-  {
-    let userIdElement = new Object();
-    userIdElement[PAYLOAD_CONSTS.UserId] = userId;
-    userIdsArr.push(userIdElement);
-  }
-  return userIdsArr;
-}
-
+const UpdateTimeColumn = 0;
+const UserIdColumn     = 1;
+const PlayerNameColumn = 2;
+const MessageColumn    = 3;
+/*
 function findUserIdColumn(sheetHeader){
   for(let i = 0; i < sheetHeader.length; i++){
     if(sheetHeader[i] == PAYLOAD_CONSTS.UserId){
@@ -52,20 +24,61 @@ function findUserIdColumn(sheetHeader){
     }
   }
 }
+*/
 
-function getUserDatas(userId){
-  let gssSheet = SpreadsheetApp.openById(gssKey).getSheetByName(sheetName);
+function getSheet(key, name){
+  const gssSheet = SpreadsheetApp.openById(key).getSheetByName(name);
   if(gssSheet == null) {
     return ContentService.createTextOutput("Error: Invalid sheet name.");
   }
+  return gssSheet;
+}
 
+function getPlayerNames(){
+  const gssSheet = getSheet(gssKey, sheetName);
+  const sheetData = gssSheet.getDataRange().getValues();
+
+  userIdsData = {
+    [PAYLOAD_CONSTS.Payload] : findPlayerNames(sheetData)
+  }
+  sendingBackPayload = ContentService.createTextOutput(JSON.stringify(userIdsData));
+  Logger.log(sendingBackPayload.getContent());
+  return sendingBackPayload;
+}
+
+
+
+function findPlayerNames(sheetData)
+{
+  let userIdsSet = new Set();
+  //from 1 to skip the header row.
+  for(let i = 1; i < sheetData.length; i++){
+    userIdsSet.add(sheetData[i][PlayerNameColumn]);
+  }
+
+  let userIdsArr = [];
+  for(let userId of userIdsSet)
+  {
+    let userIdElement = new Object();
+    userIdElement[PAYLOAD_CONSTS.PlayerName] = userId;
+    userIdsArr.push(userIdElement);
+  }
+  return userIdsArr;
+}
+
+
+
+function getUserDatas(playerName){
+  const gssSheet = getSheet(gssKey, sheetName);
   const sheetData = gssSheet.getDataRange().getValues();
   const sheetHeader = sheetData[0];
   
-  // Find whether user id already exists
+  const userId = findUserId(sheetData, playerName);
   const user_rows = findUserRowsByUserId(sheetData, userId);
 
   if(user_rows.length == 0){
+    Logger.log(`Error: \"${userId}\" was invalid userId.`);
+
     return ContentService.createTextOutput(`Error: \"${userId}\" was invalid userId.`);
   }
 
@@ -86,51 +99,101 @@ function getUserDatas(userId){
   return sendingBackPayload;
 }
 
-function generateDebugTestPayloadObject(){
-  //[variable], [] makes the variable to expand.
-  const fakePayload = {
-    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetUserIdMethod],
-    [PAYLOAD_CONSTS.UserId] : "001",
-  };
-  //fakePayload[PAYLOAD_CONSTS.Method]= PAYLOAD_CONSTS.GetDatasMethod;
-  //fakePayload[PAYLOAD_CONSTS.UserId] = "001";
-  return fakePayload;
-}
-
-// GAS's event function that will be called when https GET is requested.
-function doGet(e){
-  //e == null is just for debugging in GAS.
-  //doesn't really matter with the actual function of codes.
-  const request = (e == null) ? generateDebugTestPayloadObject() : e.parameter;
-
-  if(request == null ){
-    return ContentService.createTextOutput("Error: payload was empty.");
-  }
-  
-  if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetDatasMethod){
-    var userId = request["userId"];
-    return getUserDatas(userId);
-  }
-  else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetUserIdMethod){
-    return getUserIds();
-  }
-}
-
 function findUserRowsByUserId(sheetData, userId) {
   let rows = [];
   for(let i = 1; i < sheetData.length; i++){
-    if(sheetData[i][0] == userId){
+    if(sheetData[i][UserIdColumn] == userId){
       rows.push(i);
     }
   }
   return rows;
 }
 
-// POSTメソッドで実行される
+
+
+// GAS's event function that will be called when https GET is requested.
+function doGet(e){
+  //e == null is just for debugging in GAS.
+  //doesn't really matter with the actual function of codes.
+  const request = (e == null) ? generateDebugObjectForGET() : e.parameter;
+
+  if(request == null ){
+    return ContentService.createTextOutput("Error: payload was empty.");
+  }
+  
+  if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetDatasMethod){
+    const playerName = request[PAYLOAD_CONSTS.PlayerName];
+    return getUserDatas(playerName);
+  }
+  else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetPlayerNamesMethod){
+    return getPlayerNames();
+  }
+}
+
+function generateDebugObjectForGET(){
+  //[variable], [] makes the variable to expand.
+  const fakePayload = {
+    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetDatasMethod],
+    [PAYLOAD_CONSTS.PlayerName] : "tester",
+  };
+  return fakePayload;
+}
+
+
+// GAS's event function that will be called when https POST is requested.
 function doPost(e){
+  const request = (e == null) ? generateDebugObjectForPOST() : e.parameter;
+  if(request == null ){
+    return ContentService.createTextOutput("Error: payload was empty.");
+  }
+
+  const gssSheet = getSheet(gssKey, sheetName);
+  const sheetData = gssSheet.getDataRange().getValues();
+  const sheetHeader = sheetData[0];
+
+  const currentTime = Utilities.formatDate(new Date(), "GMT+9", "yyyy/MM/dd HH:mm:ss");
+  Logger.log(currentTime);
+
+  const userName = request[PAYLOAD_CONSTS.PlayerName];
+  const userId = findUserId(sheetData, userName);
+  const userRows = findUserRowsByUserId(sheetData, userId);
+  const messageExistsInGSS = false;
+
+  for(let user_row in userRows){
+    if(sheetData[user_row][MessageColumn] == request[PAYLOAD_CONSTS.Message]){
+      sheetData[user_row][UpdateTimeColumn].setValue(currentTime);
+      sheetData[user_row][MessageColumn].setValue(request[PAYLOAD_CONSTS.Message]);
+      messageExistsInGSS = true;
+      break;
+    }
+  }
+  
+  if(messageExistsInGSS){
+
+  }
+  else{
+
+  }
 
   
   return ContentService.createTextOutput("Save data succeeded");
+}
+
+function generateDebugObjectForPOST(){
+  const fakePayload = {
+    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
+    [PAYLOAD_CONSTS.UserId] : "002",
+    [PAYLOAD_CONSTS.Message] : "POSTING"
+  };
+  return fakePayload;
+}
+
+function findUserId(sheetData, playerName){
+  for(let i = 1; i < sheetData.length; i++){
+    if(sheetData[i][PlayerNameColumn] == playerName){
+      return sheetData[i][UserIdColumn];
+    }
+  }
 }
 
 /*

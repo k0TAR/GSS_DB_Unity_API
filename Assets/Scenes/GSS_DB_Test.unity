@@ -164,8 +164,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96747cf1e1a77f4090517c5f71aa992, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  searchingUserId: 001
-  sendRequest: 0
+  _searchingPlayerName: tester
+  _requestMethod: 1
+  _sendRequest: 0
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
