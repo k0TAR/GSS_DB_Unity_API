@@ -3,98 +3,69 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class GssGetter : MonoBehaviour
+namespace GssDbManageWrapper
 {
-    private const string _URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
-    [SerializeField]
-    private string _userName = "tester";
-    [SerializeField]
-    private MethodNames _requestMethod = MethodNames.GetUserDatas;
-    [SerializeField]
-    private bool _sendRequest = false;
-    
-
-    enum MethodNames
+    public class GssGetter
     {
-        GetUserNames,
-        GetUserDatas,
-    }
-
-    private void Update()
-    {
-        if(_sendRequest)
+        public static IEnumerator GetUserDatas(string gasUrl, string userName)
         {
-            if(_requestMethod == MethodNames.GetUserDatas)
-            {
-                StartCoroutine(GetUserDatas(_userName));
-            }
-            else if (_requestMethod == MethodNames.GetUserNames)
-            {
-                StartCoroutine(GetPlayerNames());
-            }
-            _sendRequest = false;
+            yield return GetGssData(gasUrl, MethodNames.GetUserDatas, userName);
         }
-    }
 
-    public IEnumerator GetUserDatas(string userName)
-    {
-        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetUserDatas}&userName={userName}");
-
-        yield return request.SendWebRequest();
-
-        if (request.isHttpError || request.isNetworkError)
+        public static IEnumerator GetUserNames(string gasUrl)
         {
-            Debug.Log(request.error);
-            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to GAS failed. Error: {request.error}");
+            yield return GetGssData(gasUrl, MethodNames.GetUserNames, "");
         }
-        else
-        {
-            var request_result = request.downloadHandler.text;
 
-            if (request_result[0] == 'E')
+        private static IEnumerator GetGssData(string gasUrl, MethodNames methodName, string userName)
+        {
+            UnityWebRequest request = 
+                (methodName == MethodNames.GetUserNames) ?
+                    request = UnityWebRequest.Get($"{gasUrl}?method={methodName}") 
+                : (methodName == MethodNames.GetUserDatas) ?
+                    UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(userName)}={userName}")
+                : null;
+            if(request == null)
             {
-                print(request_result);
+                Debug.LogError($"<color=blue>[GssGetter]</color> Behaviour for \"{methodName}\" is not implemented.");
+                yield break;
+            }
+
+
+            yield return request.SendWebRequest();
+
+            if (request.isHttpError || request.isNetworkError)
+            {
+                Debug.Log(request.error);
+                Debug.LogError($"<color=blue>[GssGetter]</color> Sending data to GAS failed. Error: {request.error}.");
                 yield break;
             }
             else
             {
-                var response = JsonExtension.FromJson<PayloadData>(request_result);
-                for (int i = 0; i < response.Length; i++)
+                var request_result = request.downloadHandler.text;
+                if (request_result[0] == 'E')
                 {
-                    if(response[i].userName != null)
-                    {
-                        Debug.Log($"playerName : {response[i].userName}, message : {response[i].message}");
-                    }
+                    Debug.Log(request_result);
+                    yield break;
                 }
-            }
-        }
-    }
-
-    public IEnumerator GetPlayerNames()
-    {
-        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetUserNames}");
-
-        yield return request.SendWebRequest();
-
-        if (request.isHttpError || request.isNetworkError)
-        {
-            Debug.Log(request.error);
-            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to GAS failed. Error: {request.error}");
-        }
-        else
-        {
-            var request_result = request.downloadHandler.text;
-            if (request_result[0] == 'E')
-            {
-                print(request_result);
-                yield break;
-            }
-            else
-            {
-                var response = JsonExtension.FromJson<PayloadData>(request_result);
-                for (int i = 0; i < response.Length; i++)
+                else
                 {
-                    Debug.Log($"response[{i}].userName : {response[i].userName}");
+                    var response = JsonExtension.FromJson<PayloadData>(request_result);
+
+                    if(methodName == MethodNames.GetUserNames)
+                    {
+                        for (int i = 0; i < response.Length; i++)
+                        {
+                            Debug.Log($"response[{i}].userName : {response[i].userName}");
+                        }
+                    }
+                    else if (methodName == MethodNames.GetUserDatas)
+                    {
+                        for (int i = 0; i < response.Length; i++)
+                        {
+                            Debug.Log($"response[{i}].userName : {response[i].userName}");
+                        }
+                    }
                 }
             }
         }
