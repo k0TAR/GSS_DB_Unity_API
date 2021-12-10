@@ -2,19 +2,19 @@ let gssKey = '1blYnOjyN0IFr8IPFjjzfXd7AtivAzxZR2qhI00vlBUE';
 let sheetName = 'sheet';
 // Constants used and shared within GAS and Unity.
 const PAYLOAD_CONSTS = {
-  Payload: "payload",
+  Payload: "actualPayload",
   UserId: "userId", //An id that will probably always exist in any data design.
-  PlayerName: "playerName",
+  UserName: "userName",
   Message: "message",
   Time: "updateTime",
   Method : "method",
   SaveDataMethod: "SaveUserData",
   GetDatasMethod: "GetUserDatas",
-  GetPlayerNamesMethod: "GetPlayerNames"
+  GetUserNamesMethod: "GetUserNames"
 };
 const UpdateTimeColumn = 0;
 const UserIdColumn     = 1;
-const PlayerNameColumn = 2;
+const UserNameColumn = 2;
 const MessageColumn    = 3;
 /*
 function findUserIdColumn(sheetHeader){
@@ -34,12 +34,12 @@ function getSheet(key, name){
   return gssSheet;
 }
 
-function getPlayerNames(){
+function getUserNames(){
   const gssSheet = getSheet(gssKey, sheetName);
   const sheetData = gssSheet.getDataRange().getValues();
 
   userIdsData = {
-    [PAYLOAD_CONSTS.Payload] : findPlayerNames(sheetData)
+    [PAYLOAD_CONSTS.Payload] : findUserNames(sheetData)
   }
   sendingBackPayload = ContentService.createTextOutput(JSON.stringify(userIdsData));
   Logger.log(sendingBackPayload.getContent());
@@ -48,19 +48,19 @@ function getPlayerNames(){
 
 
 
-function findPlayerNames(sheetData)
+function findUserNames(sheetData)
 {
   let userIdsSet = new Set();
   //from 1 to skip the header row.
   for(let i = 1; i < sheetData.length; i++){
-    userIdsSet.add(sheetData[i][PlayerNameColumn]);
+    userIdsSet.add(sheetData[i][UserNameColumn]);
   }
 
   let userIdsArr = [];
   for(let userId of userIdsSet)
   {
     let userIdElement = new Object();
-    userIdElement[PAYLOAD_CONSTS.PlayerName] = userId;
+    userIdElement[PAYLOAD_CONSTS.UserName] = userId;
     userIdsArr.push(userIdElement);
   }
   return userIdsArr;
@@ -68,18 +68,18 @@ function findPlayerNames(sheetData)
 
 
 
-function getUserDatas(playerName){
+function getUserDatas(UserName){
   const gssSheet = getSheet(gssKey, sheetName);
   const sheetData = gssSheet.getDataRange().getValues();
   const sheetHeader = sheetData[0];
   
-  const userId = findUserId(sheetData, playerName);
+  const userId = findUserId(sheetData, UserName);
   const user_rows = findUserRowsByUserId(sheetData, userId);
 
   if(user_rows.length == 0){
-    Logger.log(`Error: \"${userId}\" was invalid userId.`);
+    Logger.log(`Error: \"${UserName}\" does not exist in the sheet.`);
 
-    return ContentService.createTextOutput(`Error: \"${userId}\" was invalid userId.`);
+    return ContentService.createTextOutput(`Error: \"${UserName}\" does not exist in the sheet.`);
   }
 
   let returning_datas = {};
@@ -118,23 +118,24 @@ function doGet(e){
   const request = (e == null) ? generateDebugObjectForGET() : e.parameter;
 
   if(request == null ){
+    Logger.log("Error: payload was empty.");
     return ContentService.createTextOutput("Error: payload was empty.");
   }
   
   if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetDatasMethod){
-    const playerName = request[PAYLOAD_CONSTS.PlayerName];
-    return getUserDatas(playerName);
+    const UserName = request[PAYLOAD_CONSTS.UserName];
+    return getUserDatas(UserName);
   }
-  else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetPlayerNamesMethod){
-    return getPlayerNames();
+  else if(request[PAYLOAD_CONSTS.Method] == PAYLOAD_CONSTS.GetUserNamesMethod){
+    return getUserNames();
   }
 }
 
 function generateDebugObjectForGET(){
   //[variable], [] makes the variable to expand.
   const fakePayload = {
-    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
-    [PAYLOAD_CONSTS.PlayerName] : "tester",
+    [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.GetDatasMethod],
+    [PAYLOAD_CONSTS.UserName] : "tester",
   };
   return fakePayload;
 }
@@ -142,7 +143,8 @@ function generateDebugObjectForGET(){
 
 // GAS's event function that will be called when https POST is requested.
 function doPost(e){
-  const request = (e == null) ? generateDebugObjectForPOST() : e.parameter;
+  const request = (e == null) ? generateDebugObjectForPOST() : JSON.parse(e.postData.getDataAsString());
+
   if(request == null ){
     return ContentService.createTextOutput("Error: payload was empty.");
   }
@@ -154,7 +156,7 @@ function doPost(e){
   const currentTime = Utilities.formatDate(new Date(), "GMT+9", "yyyy/MM/dd HH:mm:ss");
   Logger.log(currentTime);
 
-  const userName = request[PAYLOAD_CONSTS.PlayerName];
+  const userName = request[PAYLOAD_CONSTS.UserName];
   const userId = findUserId(sheetData, userName);
   const messageExistsInGSS = false;
 
@@ -164,6 +166,7 @@ function doPost(e){
     for(let user_row in userRows){
       if(sheetData[user_row][MessageColumn] == request[PAYLOAD_CONSTS.Message]){
         sheetData[user_row][UpdateTimeColumn].setValue(currentTime);
+        sheetData[user_row][UserIdColumn].setValue(request[PAYLOAD_CONSTS.UserName]);
         sheetData[user_row][MessageColumn].setValue(request[PAYLOAD_CONSTS.Message]);
         messageExistsInGSS = true;
         break;
@@ -175,7 +178,7 @@ function doPost(e){
     let addingData = [];
     addingData[UserIdColumn] = (userId == null) ? findMaxUserId(sheetData) + 1 : userId;
     addingData[UpdateTimeColumn] = currentTime;
-    addingData[PlayerNameColumn] = request[PAYLOAD_CONSTS.PlayerName];
+    addingData[UserNameColumn] = request[PAYLOAD_CONSTS.UserName];
     addingData[MessageColumn] = request[PAYLOAD_CONSTS.Message];
     gssSheet.appendRow(addingData);
   }
@@ -187,15 +190,15 @@ function doPost(e){
 function generateDebugObjectForPOST(){
   const fakePayload = {
     [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
-    [PAYLOAD_CONSTS.PlayerName] : "New",
+    [PAYLOAD_CONSTS.UserName] : "New",
     [PAYLOAD_CONSTS.Message] : "NewMessage",
   };
   return fakePayload;
 }
 
-function findUserId(sheetData, playerName){
+function findUserId(sheetData, UserName){
   for(let i = 1; i < sheetData.length; i++){
-    if(sheetData[i][PlayerNameColumn] == playerName){
+    if(sheetData[i][UserNameColumn] == UserName){
       return sheetData[i][UserIdColumn];
     }
   }

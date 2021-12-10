@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -6,9 +7,7 @@ public class GssGetter : MonoBehaviour
 {
     private const string _URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
     [SerializeField]
-    private string _playerName = "";
-    [SerializeField]
-    private string _message = "";
+    private string _userName = "tester";
     [SerializeField]
     private MethodNames _requestMethod = MethodNames.GetUserDatas;
     [SerializeField]
@@ -17,7 +16,7 @@ public class GssGetter : MonoBehaviour
 
     enum MethodNames
     {
-        GetPlayerNames,
+        GetUserNames,
         GetUserDatas,
     }
 
@@ -27,9 +26,9 @@ public class GssGetter : MonoBehaviour
         {
             if(_requestMethod == MethodNames.GetUserDatas)
             {
-                StartCoroutine(GetUserDatas(_playerName));
+                StartCoroutine(GetUserDatas(_userName));
             }
-            else if (_requestMethod == MethodNames.GetPlayerNames)
+            else if (_requestMethod == MethodNames.GetUserNames)
             {
                 StartCoroutine(GetPlayerNames());
             }
@@ -37,9 +36,9 @@ public class GssGetter : MonoBehaviour
         }
     }
 
-    public IEnumerator GetUserDatas(string playerName)
+    public IEnumerator GetUserDatas(string userName)
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?playerName={playerName}&method={MethodNames.GetUserDatas}");
+        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetUserDatas}&userName={userName}");
 
         yield return request.SendWebRequest();
 
@@ -59,12 +58,12 @@ public class GssGetter : MonoBehaviour
             }
             else
             {
-                var response = JsonExtension.FromJson<ResponseData>(request_result);
+                var response = JsonExtension.FromJson<PayloadData>(request_result);
                 for (int i = 0; i < response.Length; i++)
                 {
-                    if(response[i].playerName != null)
+                    if(response[i].userName != null)
                     {
-                        Debug.Log($"playerName : {response[i].playerName}, message : {response[i].message}");
+                        Debug.Log($"playerName : {response[i].userName}, message : {response[i].message}");
                     }
                 }
             }
@@ -73,7 +72,7 @@ public class GssGetter : MonoBehaviour
 
     public IEnumerator GetPlayerNames()
     {
-        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetPlayerNames}");
+        UnityWebRequest request = UnityWebRequest.Get($"{_URI}?method={MethodNames.GetUserNames}");
 
         yield return request.SendWebRequest();
 
@@ -92,21 +91,12 @@ public class GssGetter : MonoBehaviour
             }
             else
             {
-                var response = JsonExtension.FromJson<ResponseData>(request_result);
+                var response = JsonExtension.FromJson<PayloadData>(request_result);
                 for (int i = 0; i < response.Length; i++)
                 {
-                    Debug.Log($"response[{i}].playerName : {response[i].playerName}");
+                    Debug.Log($"response[{i}].userName : {response[i].userName}");
                 }
             }
         }
-    }
-
-    [System.Serializable]
-    private class ResponseData
-    {
-        [SerializeField]
-        public string playerName;
-        [SerializeField]
-        public string message;
     }
 }
