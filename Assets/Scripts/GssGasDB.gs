@@ -151,47 +151,38 @@ function doPost(e){
 
   const gssSheet = getSheet(gssKey, sheetName);
   const sheetData = gssSheet.getDataRange().getValues();
-  const sheetHeader = sheetData[0];
 
   const currentTime = Utilities.formatDate(new Date(), "GMT+9", "yyyy/MM/dd HH:mm:ss");
   Logger.log(currentTime);
 
-  const userName = request[PAYLOAD_CONSTS.UserName];
-  const userId = findUserId(sheetData, userName);
-  const messageExistsInGSS = false;
+  const userId = findUserId(sheetData, request[PAYLOAD_CONSTS.UserName]);
 
   if(userId != null){
     const userRows = findUserRowsByUserId(sheetData, userId);
 
-    for(let user_row in userRows){
+    for(let user_row of userRows){
       if(sheetData[user_row][MessageColumn] == request[PAYLOAD_CONSTS.Message]){
-        sheetData[user_row][UpdateTimeColumn].setValue(currentTime);
-        sheetData[user_row][UserIdColumn].setValue(request[PAYLOAD_CONSTS.UserName]);
-        sheetData[user_row][MessageColumn].setValue(request[PAYLOAD_CONSTS.Message]);
-        messageExistsInGSS = true;
-        break;
+        gssSheet.getRange(++user_row, UpdateTimeColumn+1).setValue(currentTime);
+        return ContentService.createTextOutput(`message=\"${request[PAYLOAD_CONSTS.Message]}\" existed in gss. Updated the value of updateTime.`);
       }
     }
   }
 
-  if(!messageExistsInGSS){
-    let addingData = [];
-    addingData[UserIdColumn] = (userId == null) ? findMaxUserId(sheetData) + 1 : userId;
-    addingData[UpdateTimeColumn] = currentTime;
-    addingData[UserNameColumn] = request[PAYLOAD_CONSTS.UserName];
-    addingData[MessageColumn] = request[PAYLOAD_CONSTS.Message];
-    gssSheet.appendRow(addingData);
-  }
-
+  let addingData = [];
+  addingData[UserIdColumn] = (userId == null) ? findMaxUserId(sheetData) + 1 : userId;
+  addingData[UpdateTimeColumn] = currentTime;
+  addingData[UserNameColumn] = request[PAYLOAD_CONSTS.UserName];
+  addingData[MessageColumn] = request[PAYLOAD_CONSTS.Message];
+  gssSheet.appendRow(addingData);
   
-  return ContentService.createTextOutput("Save data succeeded");
+  return ContentService.createTextOutput("Save data succeeded.");
 }
 
 function generateDebugObjectForPOST(){
   const fakePayload = {
     [PAYLOAD_CONSTS.Method] : [PAYLOAD_CONSTS.SaveDataMethod],
-    [PAYLOAD_CONSTS.UserName] : "New",
-    [PAYLOAD_CONSTS.Message] : "NewMessage",
+    [PAYLOAD_CONSTS.UserName] : "tester",
+    [PAYLOAD_CONSTS.Message] : "tester Unity Post",
   };
   return fakePayload;
 }
