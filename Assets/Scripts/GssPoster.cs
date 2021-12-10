@@ -4,66 +4,60 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class GssPoster : MonoBehaviour
+namespace GssDbManageWrapper
 {
-    private const string _URI = "https://script.google.com/macros/s/AKfycbybwPGWrYarv9B6MFL0mW2iozcIVcqvTf6Aa3268uaPn0svEMTRw8D6QSAaZ5W3Ex0B/exec";
-    [SerializeField]
-    private string _userName = "tester";
-    [SerializeField]
-    private string _message = "tester Unity Post";
-    [SerializeField]
-    private MethodNames _requestMethod = MethodNames.SaveUserData;
-    [SerializeField]
-    private bool _sendRequest = false;
-
-
-    enum MethodNames
+    public static class GssPoster
     {
-        SaveUserData,
-    }
-
-    private void Update()
-    {
-        if (_sendRequest)
+        public static IEnumerator SaveUserData(string gasUrl, string userName, string message)
         {
-            if (_requestMethod == MethodNames.SaveUserData)
-            {
-                StartCoroutine(SaveUserData(_userName, _message));
-            }
-            _sendRequest = false;
+            var jsonBody = $"{{ \"method\" : \"{MethodNames.SaveUserData}\" , \"userName\" : \"{userName}\", \"message\" : \"{message}\"}}";
+            byte[] payloadRaw = Encoding.UTF8.GetBytes(jsonBody);
+
+            yield return PostToGss(gasUrl, MethodNames.SaveUserData, payloadRaw);
         }
-    }
 
-    public IEnumerator SaveUserData(string userName, string message)
-    {
-        var jsonBody = $"{{ \"method\" : \"{MethodNames.SaveUserData}\" , \"userName\" : \"{userName}\", \"message\" : \"{message}\"}}";
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
-
-        UnityWebRequest request = UnityWebRequest.Post($"{_URI}", "POST");
-        request.uploadHandler = (UploadHandler)new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
-        yield return request.SendWebRequest();
-
-        if (request.isHttpError || request.isNetworkError)
+        private static IEnumerator PostToGss(string gasUrl, MethodNames methodName, byte[] payload)
         {
-            Debug.Log(request.error);
-            Debug.LogError($"<color=blue>[GSSGetter]</color> Sending data to GAS failed. Error: {request.error}");
-        }
-        else
-        {
-            var request_result = request.downloadHandler.text;
-
-            if (request_result[0] == 'E')
+            UnityWebRequest request =
+                (methodName == MethodNames.SaveUserData) ?
+                    request = UnityWebRequest.Post($"{gasUrl}", "POST")
+                : null;
+            if (request == null)
             {
-                print(request_result);
+                Debug.LogError($"<color=blue>[GssPoster]</color> Behaviour for \"{methodName}\" is not implemented.");
                 yield break;
+            }
+
+
+            request.uploadHandler = (UploadHandler)new UploadHandlerRaw(payload);
+            request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            yield return request.SendWebRequest();
+
+
+            if (request.isHttpError || request.isNetworkError)
+            {
+                Debug.Log(request.error);
+                Debug.LogError($"<color=blue>[GssPoster]</color> Sending data to GAS failed. Error: {request.error}");
             }
             else
             {
-                print(request_result);
-                yield break;
+                var request_result = request.downloadHandler.text;
+
+                if (request_result[0] == 'E')
+                {
+                    Debug.Log($"<color=blue>[GssPoster]</color> {request_result}");
+                    yield break;
+                }
+                else
+                {
+                    Debug.Log(request_result);
+                    yield break;
+                }
             }
         }
+
+
     }
 }
+

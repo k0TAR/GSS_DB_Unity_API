@@ -63,7 +63,11 @@ namespace GssDbManageWrapper
                     {
                         for (int i = 0; i < response.Length; i++)
                         {
-                            Debug.Log($"response[{i}].userName : {response[i].userName}");
+                            if(response[i].message == null)
+                            {
+                                Debug.LogError($"<color=blue>[GssGetter]</color> response[i].message is null.");
+                            }
+                            Debug.Log($"[{i}] userName : {response[i].userName}, message : {response[i].message}");
                         }
                     }
                 }
