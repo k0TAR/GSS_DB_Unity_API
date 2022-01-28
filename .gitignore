@@ -54,8 +54,14 @@ sysinfo.txt
 crashlytics-build.properties
 
 # Custom
-Assets/Umbrella
-Assets/Umbrella.meta
+Assets/Scripts/Utilities/SetGasUrlAuto.cs
+Assets/Scripts/Utilities/SetGasUrlAuto.cs.meta
+Assets/Resources/gasUrl.json
+Assets/Resources/gasUrl.json.meta
+Assets/Resources/gssUrl.json
+Assets/Resources/gssUrl.json.meta
+Assets/Resources/sampleGasUrl.txt
+Assets/Resources/sampleGasUrl.txt.meta
 
 Assets/SimpleFolderIcon
 Assets/SimpleFolderIcon.meta
