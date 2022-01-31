@@ -49,6 +49,7 @@ public class GssSample : MonoBehaviour
             }
             foreach (var data in pair.Value)
             {
+                print(data);
                 areaIdMap[pair.Key].Add(data.areaId);
             }
         }
@@ -185,28 +186,10 @@ public class GssSample : MonoBehaviour
         }
         return signedArea * 0.5F;
     }
-    static Vector3 CalcCentroid(List<Vector3> points)
-    {
-        Vector3 centroid = new Vector3(0.0f, 0.0f);
-        float area = 0.0F;
-        for (var i = 0; i < points.Count; ++i)
-        {
-            var p_i = points[i];
-            var p_i_1 = (i == points.Count - 1) ? points[0] : points[i + 1];
-            var a_i = (p_i.x * p_i_1.y - p_i.y * p_i_1.x);
-            area += a_i;
-            centroid += (p_i + p_i_1) * a_i;
-        }
-        area /= 2.0f;
-        centroid /= (6.0f * area);
-        return centroid;
-    }
 
-    //int    areaId
-    bool CanGetNewPos(Vector3 newPos)
-    {
-        return false;
-    }
+
+
+
 
     private void Update()
     {

@@ -96,9 +96,8 @@ namespace GssDbManageWrapper
             _uiText.text = "userName: message\n";
             for (int i = 0; i < datas.Length; i++)
             {
-                var messageJson = JsonUtility.FromJson<SamplePayLoadDataStructure>(datas[i].data);
                 _uiText.text = string.Concat(_uiText.text, $"[{i}] {datas[i].userName}:\n");
-                _uiText.text = string.Concat(_uiText.text, $"{messageJson.ToString()}.\n");
+                _uiText.text = string.Concat(_uiText.text, $"{datas[i].ExtractData<SamplePayLoadDataStructure>().ToString()}.\n");
             }
         }
         private void GetUserNamesFeedback(PayloadData[] datas)

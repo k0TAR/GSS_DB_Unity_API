@@ -61,6 +61,8 @@ public class PolyLineDataManager : MonoBehaviour
         }
         return allPolygonVertices;
     }
+
+
     public void UpdatePolyLineDatas()
     {
         var allPolygonPositions = GetAllPolygonPositions();

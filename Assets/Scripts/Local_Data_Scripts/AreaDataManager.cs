@@ -167,37 +167,6 @@ namespace GssDbManageWrapper
             RefreshAllDatas(datas);
             _isUpdating = false;
         }
-        private Dictionary<string, List<SamplePayLoadDataStructure>> GetNearPositionDatas(
-            Vector3 targetPos, Func<Vector3, Vector3, bool> nearConditionFunc = null)
-        {
-            if (nearConditionFunc == null)
-            {
-                nearConditionFunc = IsTwoPositionsCloseEnough;
-            }
-
-            var nearPositionDatas = new Dictionary<string, List<SamplePayLoadDataStructure>>();
-            foreach (var key in _allDatas.Keys)
-            {
-                nearPositionDatas.Add(key, _allDatas[key].Where(v => nearConditionFunc(v.position, targetPos)).ToList());
-                if (nearPositionDatas[key].Count == 0)
-                {
-                    nearPositionDatas.Remove(key);
-                }
-            }
-            return nearPositionDatas;
-        }
-
-        public Dictionary<string, List<SamplePayLoadDataStructure>> GetAllNearPositionDatas(
-            Vector3 targetPos, Func<Vector3, Vector3, bool> nearConditionFunc = null)
-        {
-            return GetNearPositionDatas(targetPos, nearConditionFunc);
-        }
-
-
-        private bool IsTwoPositionsCloseEnough(Vector3 a, Vector3 b)
-        {
-            return (a - b).magnitude < .8f;
-        }
 
         public bool IsUpdating
         {
