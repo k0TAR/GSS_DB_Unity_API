@@ -41,17 +41,13 @@ namespace GssDbManageWrapper
         private static IEnumerator GetGssData(string gasUrl, string gssUrl, MethodNames methodName, string userName, Action<object> feedbackHandler = null)
         {
             UnityWebRequest request =
-                (methodName == MethodNames.GetAllDatas) ?
+                (methodName == MethodNames.GetAllDatas
+                || methodName == MethodNames.GetUserDatas
+                || methodName == MethodNames.GetUserNames
+                || methodName == MethodNames.CheckIfGssUrlValid) ?
                     UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(gssUrl)}={gssUrl}")
-                : (methodName == MethodNames.GetUserDatas) ?
-                    UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(gssUrl)}={gssUrl}")
-                : (methodName == MethodNames.GetUserNames) ?
-                    UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(gssUrl)}={gssUrl}")
-                : (methodName == MethodNames.CheckIfGssUrlValid) ?
-                    UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(gssUrl)}={gssUrl}")
-                : (methodName == MethodNames.CheckIfGasUrlValid) ?
-                    UnityWebRequest.Get($"{gasUrl}?method={methodName}")
-                : (methodName == MethodNames.CheckIfPlayerNameValid) ?
+                : (methodName == MethodNames.CheckIfGasUrlValid
+                || methodName == MethodNames.CheckIfPlayerNameValid) ?
                     UnityWebRequest.Get($"{gasUrl}?method={methodName}")
                 : null;
 

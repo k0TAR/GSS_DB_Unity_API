@@ -390,7 +390,7 @@ GameObject:
   - component: {fileID: 1251452135}
   - component: {fileID: 1251452134}
   m_Layer: 5
-  m_Name: GSS_TEXT
+  m_Name: GSS_DEBUG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -447,7 +447,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: GSS TEXTS
+  m_Text: GssDbHub debug text will be shown here.
 --- !u!222 &1251452135
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -626,7 +626,6 @@ GameObject:
   - component: {fileID: 2025085178}
   - component: {fileID: 2025085180}
   - component: {fileID: 2025085182}
-  - component: {fileID: 2025085181}
   m_Layer: 0
   m_Name: GSS_DB_HUB
   m_TagString: Untagged
@@ -646,14 +645,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9063438f478e7334690549003ccaa3d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _uiText: {fileID: 1251452134}
+  _debugText: {fileID: 1251452134}
   _userName: tester3
-  _areaId: 0
-  _vertexId: 0
-  _position: {x: 0, y: 0, z: 0}
   _messageJsons: []
   _requestMethod: 1
-  _sendRequest: 0
 --- !u!4 &2025085179
 Transform:
   m_ObjectHideFlags: 0
@@ -680,19 +675,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31e31a4aef2f8c3439de72f6ddc14d12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2025085181
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2025085177}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2cbcb75edfd32a459d42c9324856835, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _userCurrentArea: []
 --- !u!114 &2025085182
 MonoBehaviour:
   m_ObjectHideFlags: 0
