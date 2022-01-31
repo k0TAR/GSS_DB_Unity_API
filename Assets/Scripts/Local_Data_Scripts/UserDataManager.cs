@@ -102,7 +102,7 @@ namespace GssDbManageWrapper
             foreach (var d in datas)
             {
                 var userName = d.userName;
-                var color = JsonUtility.FromJson<Color>(d.message);
+                var color = JsonUtility.FromJson<Color>(d.data);
 
                 if (!_userNames.Contains(userName))
                 {

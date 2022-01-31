@@ -7,8 +7,8 @@ namespace GssDbManageWrapper
 {
     public class AreaDataManager : MonoBehaviour
     {
-        public Dictionary<string, List<MessageJson>> _allDatas = new Dictionary<string, List<MessageJson>>();
-        public List<MessageJson> _userCurrentArea = new List<MessageJson>();
+        public Dictionary<string, List<SamplePayLoadDataStructure>> _allDatas = new Dictionary<string, List<SamplePayLoadDataStructure>>();
+        public List<SamplePayLoadDataStructure> _userCurrentArea = new List<SamplePayLoadDataStructure>();
 
         private bool _isUpdating = false;
 
@@ -38,7 +38,7 @@ namespace GssDbManageWrapper
         }
 
 
-        public List<MessageJson> GetAreaMessages(string userName, int areaId)
+        public List<SamplePayLoadDataStructure> GetAreaMessages(string userName, int areaId)
         {
             var userDatas = GetUserDatas(userName);
             if (userDatas != null)
@@ -60,7 +60,7 @@ namespace GssDbManageWrapper
         {
             var currentAreaId = GetCurrentAreaId(userName);
             var nextVertexId = _userCurrentArea.Count;
-            _userCurrentArea.Add(new MessageJson(false, currentAreaId, nextVertexId, position));
+            _userCurrentArea.Add(new SamplePayLoadDataStructure(false, currentAreaId, nextVertexId, position));
         }
 
         public List<Vector3> GetCurrentAreaDatasAsVector()
@@ -78,10 +78,10 @@ namespace GssDbManageWrapper
         {
             RefreshUserAreaData();
             var currentAreaId = GetCurrentAreaId(userName);
-            List<MessageJson> messageData = new List<MessageJson>();
+            List<SamplePayLoadDataStructure> messageData = new List<SamplePayLoadDataStructure>();
             for (int i = 0; i < vertices.Count; ++i)
             {
-                messageData.Add(new MessageJson(true, currentAreaId, i, vertices[i]));
+                messageData.Add(new SamplePayLoadDataStructure(true, currentAreaId, i, vertices[i]));
             }
             _userCurrentArea = messageData;
         }
@@ -91,7 +91,7 @@ namespace GssDbManageWrapper
             var userDatas = GetUserDatas(userName);
             var areaIdData = userDatas.Where(x => x.areaId == areaId);
             List<Vector3> verticies = new List<Vector3>();
-            foreach (MessageJson m in areaIdData)
+            foreach (SamplePayLoadDataStructure m in areaIdData)
             {
                 verticies.Add(m.position);
             }
@@ -99,7 +99,7 @@ namespace GssDbManageWrapper
         }
 
 
-        public List<MessageJson> GetUserDatas(string userName)
+        public List<SamplePayLoadDataStructure> GetUserDatas(string userName)
         {
             if (_allDatas.ContainsKey(userName))
             {
@@ -112,12 +112,12 @@ namespace GssDbManageWrapper
             }
         }
 
-        public List<MessageJson> GetAllDatas()
+        public List<SamplePayLoadDataStructure> GetAllDatas()
         {
-            List<MessageJson> datas = new List<MessageJson>();
-            foreach (List<MessageJson> list in _allDatas.Values)
+            List<SamplePayLoadDataStructure> datas = new List<SamplePayLoadDataStructure>();
+            foreach (List<SamplePayLoadDataStructure> list in _allDatas.Values)
             {
-                foreach (MessageJson m in list)
+                foreach (SamplePayLoadDataStructure m in list)
                 {
                     datas.Add(m);
                 }
@@ -126,7 +126,7 @@ namespace GssDbManageWrapper
         }
 
 
-        private void AddData(ref Dictionary<string, List<MessageJson>> dataList, string userName, MessageJson data)
+        private void AddData(ref Dictionary<string, List<SamplePayLoadDataStructure>> dataList, string userName, SamplePayLoadDataStructure data)
         {
             if (dataList.ContainsKey(userName))
             {
@@ -134,18 +134,18 @@ namespace GssDbManageWrapper
             }
             else
             {
-                var newData = new List<MessageJson>();
+                var newData = new List<SamplePayLoadDataStructure>();
                 newData.Add(data);
                 dataList.Add(userName, newData);
             }
         }
 
-        private void RefreshDatas(ref Dictionary<string, List<MessageJson>> dataList, PayloadData[] datas)
+        private void RefreshDatas(ref Dictionary<string, List<SamplePayLoadDataStructure>> dataList, PayloadData[] datas)
         {
             dataList.Clear();
             foreach (var (userName, messageJson) in from d in datas
                                                     let userName = d.userName
-                                                    let messageJson = d.ExtractMessageJson()
+                                                    let messageJson = d.ExtractData<SamplePayLoadDataStructure>()
                                                     select (userName, messageJson))
             {
                 AddData(ref dataList, userName, messageJson);
@@ -167,7 +167,7 @@ namespace GssDbManageWrapper
             RefreshAllDatas(datas);
             _isUpdating = false;
         }
-        private Dictionary<string, List<MessageJson>> GetNearPositionDatas(
+        private Dictionary<string, List<SamplePayLoadDataStructure>> GetNearPositionDatas(
             Vector3 targetPos, Func<Vector3, Vector3, bool> nearConditionFunc = null)
         {
             if (nearConditionFunc == null)
@@ -175,7 +175,7 @@ namespace GssDbManageWrapper
                 nearConditionFunc = IsTwoPositionsCloseEnough;
             }
 
-            var nearPositionDatas = new Dictionary<string, List<MessageJson>>();
+            var nearPositionDatas = new Dictionary<string, List<SamplePayLoadDataStructure>>();
             foreach (var key in _allDatas.Keys)
             {
                 nearPositionDatas.Add(key, _allDatas[key].Where(v => nearConditionFunc(v.position, targetPos)).ToList());
@@ -187,7 +187,7 @@ namespace GssDbManageWrapper
             return nearPositionDatas;
         }
 
-        public Dictionary<string, List<MessageJson>> GetAllNearPositionDatas(
+        public Dictionary<string, List<SamplePayLoadDataStructure>> GetAllNearPositionDatas(
             Vector3 targetPos, Func<Vector3, Vector3, bool> nearConditionFunc = null)
         {
             return GetNearPositionDatas(targetPos, nearConditionFunc);

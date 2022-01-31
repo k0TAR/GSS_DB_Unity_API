@@ -377,7 +377,7 @@ public class GssSample : MonoBehaviour
         }
     }
 
-    private void LineClosedUpdateDatas(List<MessageJson> datas)
+    private void LineClosedUpdateDatas(List<SamplePayLoadDataStructure> datas)
     {
         //Upload the datas, and get all the data by feedback function.
         _gssDbHub.UpdateDatas(_userDataManager.LocalPlayerName, datas,

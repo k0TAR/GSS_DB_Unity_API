@@ -24,7 +24,7 @@ namespace GssDbManageWrapper
         [SerializeField]
         private Vector3 _position = new Vector3(0, 0, 0);
         [SerializeField]
-        private List<MessageJson> _messageJsons;
+        private List<SamplePayLoadDataStructure> _messageJsons;
         [SerializeField]
         private MethodNames _requestMethod = MethodNames.GetUserNames;
         [SerializeField]
@@ -96,7 +96,7 @@ namespace GssDbManageWrapper
             _uiText.text = "userName: message\n";
             for (int i = 0; i < datas.Length; i++)
             {
-                var messageJson = JsonUtility.FromJson<MessageJson>(datas[i].message);
+                var messageJson = JsonUtility.FromJson<SamplePayLoadDataStructure>(datas[i].data);
                 _uiText.text = string.Concat(_uiText.text, $"[{i}] {datas[i].userName}:\n");
                 _uiText.text = string.Concat(_uiText.text, $"{messageJson.ToString()}.\n");
             }
@@ -106,7 +106,7 @@ namespace GssDbManageWrapper
             _uiText.text = "userName:\n";
             for (int i = 0; i < datas.Length; i++)
             {
-                var messageJson = JsonUtility.FromJson<MessageJson>(datas[i].message);
+                var messageJson = JsonUtility.FromJson<SamplePayLoadDataStructure>(datas[i].data);
                 _uiText.text = string.Concat(_uiText.text, $"[{i}] {datas[i].userName}\n");
             }
         }
@@ -115,7 +115,7 @@ namespace GssDbManageWrapper
             _uiText.text = "userName: message\n";
             for (int i = 0; i < datas.Length; i++)
             {
-                var color = JsonUtility.FromJson<Color>(datas[i].message);
+                var color = JsonUtility.FromJson<Color>(datas[i].data);
                 _uiText.text = string.Concat(_uiText.text, $"[{i}] {datas[i].userName}:\n");
                 _uiText.text = string.Concat(_uiText.text, $"{color}.\n");
             }

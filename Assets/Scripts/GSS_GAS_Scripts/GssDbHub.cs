@@ -66,7 +66,7 @@ namespace GssDbManageWrapper
 
 
         public void SaveData(
-            string userName, MessageJson data, Action<string> localDataFeedback = null)
+            string userName, SamplePayLoadDataStructure data, Action<string> localDataFeedback = null)
         {
             if (localDataFeedback == null) localDataFeedback = DefaultPostFeedBack;
 
@@ -75,7 +75,7 @@ namespace GssDbManageWrapper
                 GssPoster.SaveUserData(GasUrlManager.GetUrl(), GssUrlManager.GetUrl(), userName, message, response => localDataFeedback((string)response)));
         }
 
-        public void UpdateDatas(string userName, List<MessageJson> datas, Action<string> localDataFeedback = null)
+        public void UpdateDatas(string userName, List<SamplePayLoadDataStructure> datas, Action<string> localDataFeedback = null)
         {
             if (localDataFeedback == null) localDataFeedback = DefaultPostFeedBack;
 

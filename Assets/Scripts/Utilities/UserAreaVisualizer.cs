@@ -32,7 +32,7 @@ public class UserAreaVisualizer : MonoBehaviour
             }
 
 
-            foreach (MessageJson d in _areaDataManager._userCurrentArea)
+            foreach (SamplePayLoadDataStructure d in _areaDataManager._userCurrentArea)
             {
                 GameObject a = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 a.transform.position = new Vector3(d.position.x, d.position.z, d.position.y);

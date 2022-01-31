@@ -7,28 +7,28 @@ namespace GssDbManageWrapper
     public class PayloadData
     {
         public string userName;
-        public string message;
+        public string data;
 
         public override string ToString()
         {
-            return $"userName : {this.userName}, message : {this.message}";
+            return $"{nameof(this.userName)} : {this.userName}, {nameof(this.data)} : {this.data}";
         }
 
-        public MessageJson ExtractMessageJson()
+        public T ExtractData<T>()
         {
-            return JsonUtility.FromJson<MessageJson>(this.message);
+            return JsonUtility.FromJson<T>(this.data);
         }
     }
 
     [Serializable]
-    public class MessageJson
+    public class SamplePayLoadDataStructure
     {
         public bool isClosed;
         public int areaId;
         public int vertexId;
         public Vector3 position;
 
-        public MessageJson(bool isClosed, int areaId, int vertexId, Vector3 position)
+        public SamplePayLoadDataStructure(bool isClosed, int areaId, int vertexId, Vector3 position)
         {
             this.isClosed = isClosed;
             this.areaId = areaId;
@@ -38,7 +38,10 @@ namespace GssDbManageWrapper
 
         public override string ToString()
         {
-            return $"isClosed={isClosed}, areaId={this.areaId}, vertexId={this.vertexId}, position={this.position}";
+            return $"{nameof(this.isClosed)}={this.isClosed}," +
+                $" {nameof(this.areaId)}={this.areaId}," +
+                $" {nameof(this.vertexId)}={this.vertexId}," +
+                $" {nameof(this.position)}={this.position}";
         }
     }
 }
