@@ -647,8 +647,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _debugText: {fileID: 1251452134}
   _userName: tester3
-  _messageJsons: []
-  _requestMethod: 1
+  _payloadDatas:
+  - areaId: 0
+    vertexId: 0
+    position: {x: 0, y: 0, z: 0}
+  _requestMethod: 2
 --- !u!4 &2025085179
 Transform:
   m_ObjectHideFlags: 0
@@ -689,4 +692,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _localPlayer:
     _userName: 
-    _color: {r: 0, g: 0, b: 0, a: 0}
+    _color:
+      r: 0
+      g: 0
+      b: 0
+      a: 0
+  _isUpdating: 0

@@ -40,29 +40,17 @@ namespace GssDbManageWrapper
             {
                 _gssDbHub.GetUserNames(GetUserNamesFeedback);
             }
-            else if (_requestMethod == MethodNames.GetUserDatas)
+            else if (_requestMethod == MethodNames.SaveDatas)
             {
-                _gssDbHub.GetUserDatas(GetUserDatasFeedback);
-            }
-            else if (_requestMethod == MethodNames.SaveData)
-            {
-                //_gssDbHub.SaveData(_userName, new MessageJson(false, _areaId, _vertexId, _position));
-            }
-            else if (_requestMethod == MethodNames.SetUserData)
-            {
-                //_gssDbHub.SetUserData(new UserData(_userName, _userDataManager.RandomColor()));
-            }
-            else if (_requestMethod == MethodNames.UpdateDatas)
-            {
-                _gssDbHub.UpdateDatas(_userName, _payloadDatas);
+                _gssDbHub.SaveDatas(_userName, _payloadDatas);
             }
             else if (_requestMethod == MethodNames.RemoveData)
             {
-                //_gssDbHub.RemoveData(_userName, _areaId, _vertexId);
+                _gssDbHub.RemoveData(_userName, _payloadDatas[0]);
             }
-            else if (_requestMethod == MethodNames.RemoveArea)
+            else if (_requestMethod == MethodNames.RemoveUserDatas)
             {
-                //_gssDbHub.RemoveArea(_userName, _areaId);
+                _gssDbHub.RemoveUserDatas(_userName);
             }
         }
 

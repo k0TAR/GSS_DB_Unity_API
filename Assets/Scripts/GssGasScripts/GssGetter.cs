@@ -11,10 +11,6 @@ namespace GssDbManageWrapper
         {
             yield return GetGssData(gasUrl, gssUrl, MethodNames.GetAllDatas, "", feedbackHandler);
         }
-        public static IEnumerator GetUserDatas(string gasUrl, string gssUrl, Action<object> feedbackHandler = null)
-        {
-            yield return GetGssData(gasUrl, gssUrl, MethodNames.GetUserDatas, "", feedbackHandler);
-        }
 
         public static IEnumerator GetUserNames(string gasUrl, string gssUrl, Action<object> feedbackHandler = null)
         {
@@ -31,23 +27,15 @@ namespace GssDbManageWrapper
             yield return GetGssData(gasUrl, "", MethodNames.CheckIfGasUrlValid, "", feedbackHandler);
         }
 
-        public static IEnumerator CheckIfPlayerNameValid(
-            string gasUrl, string gssUrl, string playerName, Action<object> feedbackHandler = null)
-        {
-            yield return GetGssData(
-                gasUrl, gssUrl, MethodNames.CheckIfPlayerNameValid, playerName, feedbackHandler);
-        }
 
         private static IEnumerator GetGssData(string gasUrl, string gssUrl, MethodNames methodName, string userName, Action<object> feedbackHandler = null)
         {
             UnityWebRequest request =
                 (methodName == MethodNames.GetAllDatas
-                || methodName == MethodNames.GetUserDatas
                 || methodName == MethodNames.GetUserNames
                 || methodName == MethodNames.CheckIfGssUrlValid) ?
                     UnityWebRequest.Get($"{gasUrl}?method={methodName}&{nameof(gssUrl)}={gssUrl}")
-                : (methodName == MethodNames.CheckIfGasUrlValid
-                || methodName == MethodNames.CheckIfPlayerNameValid) ?
+                : (methodName == MethodNames.CheckIfGasUrlValid) ?
                     UnityWebRequest.Get($"{gasUrl}?method={methodName}")
                 : null;
 
@@ -84,22 +72,15 @@ namespace GssDbManageWrapper
                 {
                     feedbackHandler?.Invoke(request_result);
                 }
-                else if (methodName == MethodNames.CheckIfPlayerNameValid)
-                {
-                    feedbackHandler?.Invoke(request_result);
-                }
                 else
                 {
+                    Debug.Log(request_result);
                     var response = JsonExtension.FromJson<PayloadData>(request_result);
                     if (methodName == MethodNames.GetAllDatas)
                     {
                         feedbackHandler?.Invoke(response);
                     }
                     else if (methodName == MethodNames.GetUserNames)
-                    {
-                        feedbackHandler?.Invoke(response);
-                    }
-                    else if (methodName == MethodNames.GetUserDatas)
                     {
                         feedbackHandler?.Invoke(response);
                     }

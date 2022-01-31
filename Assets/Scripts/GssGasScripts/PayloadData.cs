@@ -23,14 +23,12 @@ namespace GssDbManageWrapper
     [Serializable]
     public class SamplePayLoadDataStructure
     {
-        public bool isClosed;
         public int areaId;
         public int vertexId;
         public Vector3 position;
 
         public SamplePayLoadDataStructure(bool isClosed, int areaId, int vertexId, Vector3 position)
         {
-            this.isClosed = isClosed;
             this.areaId = areaId;
             this.vertexId = vertexId;
             this.position = position;
@@ -38,8 +36,7 @@ namespace GssDbManageWrapper
 
         public override string ToString()
         {
-            return $"{nameof(this.isClosed)}={this.isClosed}," +
-                $" {nameof(this.areaId)}={this.areaId}," +
+            return $"{nameof(this.areaId)}={this.areaId}," +
                 $" {nameof(this.vertexId)}={this.vertexId}," +
                 $" {nameof(this.position)}={this.position}";
         }
