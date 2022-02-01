@@ -1,55 +1,74 @@
-import { CONSTS } from "./consts";
-import * as u from "./utils";
+import { Consts } from "./consts";
+import { Utils } from "./utils";
 
-function doPost(e: any): GoogleAppsScript.Content.TextOutput {
-  const result = executeDoPost(e);
-  return ContentService.createTextOutput(JSON.stringify(result));
+// GAS's event function that will be called when https POST is requested.
+function doPost(e: any) {
+  const request = JSON.parse(e.postData.getDataAsString());
+
+  if (request == null) {
+    return ContentService.createTextOutput("Error: payload was empty.");
+  }
+
+  if (request[Consts.CONSTS.Method] == Consts.CONSTS.SaveDatasMethod) {
+    return saveDatas(request);
+  } else if (request[Consts.CONSTS.Method] == Consts.CONSTS.RemoveDataMethod) {
+    return removeData(request);
+  } else if (
+    request[Consts.CONSTS.Method] == Consts.CONSTS.RemoveUserDatasMethod
+  ) {
+    return removeUserDatas(request);
+  }
 }
 
-function executeDoPost(e: any) {
-  console.log("start executeDoPost");
-  return { status: "ok", method: "post" };
-}
+// function doPost(e: any): GoogleAppsScript.Content.TextOutput {
+//   const result = executeDoPost(e);
+//   return ContentService.createTextOutput(JSON.stringify(result));
+// }
 
-function saveDatas(request) {
+// function executeDoPost(e: any) {
+//   console.log("start executeDoPost");
+//   return { status: "ok", method: "post" };
+// }
+
+function saveDatas(request: any) {
   const currentTime = Utilities.formatDate(
     new Date(),
     "GMT+9",
     "yyyy/MM/dd HH:mm:ss"
   );
 
-  const gssUrl = request[CONSTS.GssUrl];
-  const dataListSheet = u.getDataListSheet(gssUrl);
+  const gssUrl = request[Consts.CONSTS.GssUrl];
+  const dataListSheet = Utils.getDataListSheet(gssUrl);
   const dataListSheetData = dataListSheet.getDataRange().getValues();
-  const userListSheet = u.getUserListSheet(gssUrl);
+  const userListSheet = Utils.getUserListSheet(gssUrl);
   const userListSheetData = userListSheet.getDataRange().getValues();
 
-  const userName = request[CONSTS.UserName];
+  const userName = request[Consts.CONSTS.UserName];
 
-  let userId = u.findUserId(userListSheetData, userName);
-  const payloadDatas = request[CONSTS.Datas];
+  let userId = Utils.findUserId(userListSheetData, userName);
+  const payloadDatas = request[Consts.CONSTS.Datas];
 
   if (userId == null) {
-    userId = u.findMaxUserId(userListSheetData) + 1;
+    userId = Utils.findMaxUserId(userListSheetData) + 1;
     let addingUser = [];
-    addingUser[CONSTS.UserIdColumn] = userId;
-    addingUser[CONSTS.UserNameColumn] = userName;
-    addingUser[CONSTS.UpdateTimeColumn] = currentTime;
+    addingUser[Consts.CONSTS.UserIdColumn] = userId;
+    addingUser[Consts.CONSTS.UserNameColumn] = userName;
+    addingUser[Consts.CONSTS.UpdateTimeColumn] = currentTime;
     userListSheet.appendRow(addingUser);
   }
 
-  const userRows = u.findUserRowsByUserId(dataListSheetData, userId);
+  const userRows = Utils.findUserRowsByUserId(dataListSheetData, userId);
 
   for (const data of payloadDatas) {
     let addingData = [];
-    addingData[CONSTS.UserIdColumn] = userId;
+    addingData[Consts.CONSTS.UserIdColumn] = userId;
     let dataString = JSON.stringify(data);
 
     let dataExisted = false;
     for (let userRow of userRows) {
-      if (dataListSheetData[userRow][CONSTS.DataColumn] == dataString) {
+      if (dataListSheetData[userRow][Consts.CONSTS.DataColumn] == dataString) {
         dataListSheet
-          .getRange(userRow + 1, CONSTS.UpdateTimeColumn + 1)
+          .getRange(userRow + 1, Consts.CONSTS.UpdateTimeColumn + 1)
           .setValue(currentTime);
         dataExisted = true;
         break;
@@ -57,8 +76,8 @@ function saveDatas(request) {
     }
 
     if (!dataExisted) {
-      addingData[CONSTS.DataColumn] = dataString;
-      addingData[CONSTS.UpdateTimeColumn] = currentTime;
+      addingData[Consts.CONSTS.DataColumn] = dataString;
+      addingData[Consts.CONSTS.UpdateTimeColumn] = currentTime;
       dataListSheet.appendRow(addingData);
     }
   }
@@ -67,22 +86,22 @@ function saveDatas(request) {
 }
 
 function removeData(request) {
-  const gssUrl = request[CONSTS.GssUrl];
-  const dataListSheet = u.getDataListSheet(gssUrl);
+  const gssUrl = request[Consts.CONSTS.GssUrl];
+  const dataListSheet = Utils.getDataListSheet(gssUrl);
   const dataListSheetData = dataListSheet.getDataRange().getValues();
-  const userListSheet = u.getUserListSheet(gssUrl);
+  const userListSheet = Utils.getUserListSheet(gssUrl);
   const userListSheetData = userListSheet.getDataRange().getValues();
 
-  const userName = request[CONSTS.UserName];
-  const userId = u.findUserId(userListSheetData, userName);
-  const data = JSON.stringify(request[CONSTS.Data]);
+  const userName = request[Consts.CONSTS.UserName];
+  const userId = Utils.findUserId(userListSheetData, userName);
+  const data = JSON.stringify(request[Consts.CONSTS.Data]);
 
   if (userId != null) {
-    const userRows = u.findUserRowsByUserId(dataListSheetData, userId);
+    const userRows = Utils.findUserRowsByUserId(dataListSheetData, userId);
 
     userRows.reverse();
     for (let userRow of userRows) {
-      if (dataListSheetData[userRow][CONSTS.DataColumn] == data) {
+      if (dataListSheetData[userRow][Consts.CONSTS.DataColumn] == data) {
         dataListSheet.deleteRows(1 + Number(userRow), 1);
       }
     }
@@ -98,17 +117,17 @@ function removeData(request) {
 }
 
 function removeUserDatas(request) {
-  const gssUrl = request[CONSTS.GssUrl];
-  const dataListSheet = u.getDataListSheet(gssUrl);
+  const gssUrl = request[Consts.CONSTS.GssUrl];
+  const dataListSheet = Utils.getDataListSheet(gssUrl);
   const dataListSheetData = dataListSheet.getDataRange().getValues();
-  const userListSheet = u.getUserListSheet(gssUrl);
+  const userListSheet = Utils.getUserListSheet(gssUrl);
   const userListSheetData = userListSheet.getDataRange().getValues();
 
-  const userName = request[CONSTS.UserName];
-  const userId = u.findUserId(userListSheetData, userName);
+  const userName = request[Consts.CONSTS.UserName];
+  const userId = Utils.findUserId(userListSheetData, userName);
 
   if (userId != null) {
-    const userRows = u.findUserRowsByUserId(dataListSheetData, userId);
+    const userRows = Utils.findUserRowsByUserId(dataListSheetData, userId);
 
     userRows.reverse();
     for (let userRow of userRows) {
