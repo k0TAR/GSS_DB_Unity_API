@@ -204,4 +204,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-.clasp.json
+*.clasp.json
+
+*.ps1
